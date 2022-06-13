@@ -1,35 +1,79 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using my_first_app.MODELS;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace my_first_app
 {
     public static class Function1
     {
-        [FunctionName("Function1")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+        //[FunctionName("Function1")]
+        //public static IActionResult Run(
+        //    [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+        //    //ILogger log,
+        //[CosmosDB("Employeedatabase", "EmployeeContainer", ConnectionStringSetting = "CosmosDBConnection",SqlQuery = "SELECT * FROM c order by c._ts desc")]
+        //IEnumerable<Employee> todos)
+        //{
+        //    //log.Info("Getting todo list items");
+        //    return new OkObjectResult(todos);
+        //    //log.LogInformation("C# HTTP trigger function processed a request.");
+
+        //    //var inputValue = await req.Content.ReadAsAsync<JObject>();
+        //    ////this is a new program
+        //    //string requestBody = await new StreamReader((string)inputValue).ReadToEndAsync();
+        //    ////dynamic data = JsonConvert.DeserializeObject(requestBody);
+
+        //    ////string responseMessage = string.IsNullOrEmpty(name)
+        //    ////    ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
+        //    ////    : $"Hello, {name}. This HTTP triggered function executed successfully.";
+
+        //    //return new OkObjectResult("");
+        //}
+
+        //    [FunctionName("CosmosDb_GetTodos")]
+        //    public static IActionResult GetTodos(
+        //[HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "todo4")] HttpRequest req,
+        //[CosmosDB(
+        //    databaseName: "tododb",
+        //    collectionName: "tasks",
+        //    ConnectionStringSetting = "CosmosDBConnection",
+        //   // SqlQuery = "SELECT * FROM c order by c._ts desc"
+        //   Id ="{id}"
+        //        )]
+        //    Employee todos,
+        //TraceWriter log)
+        //    {
+        //        log.Info("Getting todo list items");
+        //        return new OkObjectResult(todos);
+        //    }
+
+
+        [FunctionName("CreateProvider")]
+        public static async Task<dynamic> CreateProvider(
+         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "CreateProvider")] HttpRequestMessage req,
+        
+         ILogger log,
+         [CosmosDB("Employeedatabase", "EmployeeContainer",  ConnectionStringSetting = "CosmosDBConnection")] IDocumentClient client
+        )
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            try
+            {
+                var input = await req.Content.ReadAsAsync<Employee>();
+                Uri COLLECTION = UriFactory.CreateDocumentCollectionUri("Employeedatabase", "EmployeeContainer");
+                return await client.CreateDocumentAsync(COLLECTION, input);
 
-            string name = req.Query["name"];
-            //this is a new program
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
-
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
-
-            return new OkObjectResult(responseMessage);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+                return null;
+            }
         }
+
     }
 }
