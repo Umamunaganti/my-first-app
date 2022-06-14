@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using my_first_app.MODELS;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -55,10 +56,9 @@ namespace my_first_app
 
         [FunctionName("CreateProvider")]
         public static async Task<dynamic> CreateProvider(
-         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "CreateProvider")] HttpRequestMessage req,
-        
+         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "CreateProvider")] HttpRequestMessage req,
          ILogger log,
-         [CosmosDB("Employeedatabase", "EmployeeContainer",  ConnectionStringSetting = "CosmosDBConnection")] IDocumentClient client
+         [CosmosDB("Employeedatabase", "EmployeeContainer", ConnectionStringSetting = "CosmosDBConnection")] IDocumentClient client
         )
         {
             try
@@ -75,5 +75,38 @@ namespace my_first_app
             }
         }
 
+
+
+        [FunctionName("updateProvider")]
+        public static async Task<dynamic> updateProvider(
+         [HttpTrigger(AuthorizationLevel.Function, "put", Route = "updateProvider")] HttpRequestMessage req,
+         ILogger log,
+         [CosmosDB("Employeedatabase", "EmployeeContainer", ConnectionStringSetting = "CosmosDBConnection")] IDocumentClient client
+        )
+        {
+            try
+            {
+                var input = await req.Content.ReadAsAsync<Employee>();
+                Uri docUri = UriFactory.CreateDocumentUri("Employeedatabase", "EmployeeContainer", input.Employeeid);
+               
+                
+                return await client.ReplaceDocumentAsync(docUri, input);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+                return null;
+            }
+        }
+
+
+
+
+       
     }
+
 }
+
+
+
+
