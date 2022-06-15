@@ -16,10 +16,13 @@ namespace my_first_app.MODELS
         [StringLength(100,ErrorMessage="Name not be exceed")]
         public string Name { get; set; }
 
+        [JsonProperty("EmployeeID")]
+        public string EmployeeID { get; set; }
+
         [JsonProperty("id")]
-        
-        public string Employeeid { get; set; }
-         [JsonProperty("Age")]
+        public string id { get; set; }
+
+        [JsonProperty("Age")]
         [Required]
         //[Display(Name="Date of Birth")]
         //[DataType(DataType.Date),DisplayFormat(DataFormatString ="{0:dd/mm/yyyy}",ApplyFormatInEditMode = true)]

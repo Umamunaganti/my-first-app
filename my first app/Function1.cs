@@ -87,9 +87,9 @@ namespace my_first_app
             try
             {
                 var input = await req.Content.ReadAsAsync<Employee>();
-                Uri docUri = UriFactory.CreateDocumentUri("Employeedatabase", "EmployeeContainer", input.Employeeid);
-               
-                
+                Uri docUri = UriFactory.CreateDocumentUri("Employeedatabase", "EmployeeContainer", input.EmployeeID);
+
+
                 return await client.ReplaceDocumentAsync(docUri, input);
             }
             catch (Exception ex)
@@ -99,10 +99,50 @@ namespace my_first_app
             }
         }
 
+        [FunctionName("getProvider")]
+        public static async Task<dynamic> getProvider(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "getProvider")] HttpRequestMessage req,
+        ILogger log,
+        [CosmosDB("Employeedatabase", "EmployeeContainer", ConnectionStringSetting = "CosmosDBConnection")] IDocumentClient client
+       )
+        {
+            try
+            {
+
+                Uri COLLECTION = UriFactory.CreateDocumentCollectionUri("Employeedatabase", "EmployeeContainer");
+                var emp = client.CreateDocumentQuery<Employee>(COLLECTION, null);
+                return emp;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+                return null;
+            }
+        }
 
 
+        [FunctionName("DeleteProvider")]
+        public static async Task<dynamic> DeleteProvider(
+        [HttpTrigger(AuthorizationLevel.Function, "Delete", Route = "DeleteProvider/{id}/{employeeId}")] HttpRequestMessage req,
+        ILogger log,
+        string id,
+        string employeeId,
+        [CosmosDB("Employeedatabase", "EmployeeContainer", ConnectionStringSetting = "CosmosDBConnection")] IDocumentClient client
+       )
+        {
+            try
+            {
 
-       
+                Uri COLLECTION = UriFactory.CreateDocumentUri("Employeedatabase", "EmployeeContainer", id);
+                var delete = await client.DeleteDocumentAsync(COLLECTION, new RequestOptions { PartitionKey = new PartitionKey(employeeId) });
+                return delete;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+                return null;
+            }
+        }
     }
 
 }
